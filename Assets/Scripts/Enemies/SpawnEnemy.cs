@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace Quest.Enemies
 {
-    public class SpawnEnemy : MonoBehaviour
+    public class SpawnEnemy : Enemy
     {
         [SerializeField] private Enemy enemyPrefab;
         [SerializeField] private float spawnStep = 1f;
