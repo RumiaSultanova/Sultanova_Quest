@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using UnityEngine;
 
@@ -5,35 +6,57 @@ namespace Quest.Enemies
 {
     public class ShootingEnemy : MonoBehaviour
     {
-        [SerializeField] private GameObject bulletPrefab;
+        [SerializeField] private Bullet bulletPrefab;
         [SerializeField] private Transform spawnPoint;
-        [SerializeField] private float spawnStep = 1f;
-        [SerializeField] private float angularSpeed = .5f;
         private Transform player;
 
-        private void Start()
+        [SerializeField] private float spawnStep = 1f;
+        [SerializeField] private float angularSpeed = .5f;
+        [SerializeField] private float shootDistance = 10f;
+
+        private int playerLayerMask;
+        
+        private void Awake()
         {
             player = FindObjectOfType<Quest.Player.PlayerMovement>().transform;
+            playerLayerMask = 1 << player.gameObject.layer;
         }
 
         private void OnEnable()
         {
-            StartCoroutine(Shoot());
+            StartCoroutine(ShootRepeat());
         }
 
-        private IEnumerator Shoot()
+        private IEnumerator ShootRepeat()
         {
             while (enabled)
             {
-                Instantiate(bulletPrefab, spawnPoint.position, spawnPoint.rotation);
+                Shoot();
                 yield return new WaitForSeconds(spawnStep);
             }
             yield return null;
         }
 
+        private void Shoot()
+        {
+            Debug.DrawRay(spawnPoint.position, spawnPoint.forward, Color.red, shootDistance);
+            if (Physics.Raycast(spawnPoint.position, spawnPoint.forward, out var hit, shootDistance,
+                    playerLayerMask))
+            {
+                var bullet = Instantiate(bulletPrefab, spawnPoint.position, spawnPoint.rotation);
+                bullet.Init(player.tag);
+            }
+        }
+
+        private void OnDrawGizmos()
+        {
+            Gizmos.color = Color.green;
+            Gizmos.DrawRay(spawnPoint.position, spawnPoint.forward);
+        }
+
         private void OnDisable()
         {
-            StopCoroutine(Shoot());
+            StopCoroutine(ShootRepeat());
         }
 
         private void Update()
